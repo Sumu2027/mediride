@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'login_screen.dart';
+import 'booking_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -311,7 +312,13 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       onPressed: () {
                         Navigator.pop(sheetContext);
-                        _openBookingOptions(ambulance);
+
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => BookingScreen(ambulance: ambulance),
+                          ),
+                        );
                       },
                       child: const Text(
                         'Continue Booking',
@@ -331,170 +338,55 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _openBookingOptions(Map<String, dynamic> ambulance) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.white,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
-      ),
-      builder: (sheetContext) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(22, 24, 22, 24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Choose Booking Type',
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: navy,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'How would you like to book your ambulance?',
-                  style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
-                ),
-                const SizedBox(height: 22),
-                _bookingOption(
-                  icon: Icons.emergency_rounded,
-                  color: const Color(0xFFDC2626),
-                  title: 'Emergency Booking',
-                  subtitle: 'Request an ambulance now',
-                  onTap: () {
-                    Navigator.pop(sheetContext);
-                    _startBooking('Emergency', ambulance);
-                  },
-                ),
-                const SizedBox(height: 12),
-                _bookingOption(
-                  icon: Icons.calendar_month_rounded,
-                  color: const Color(0xFF0891B2),
-                  title: 'Reservation',
-                  subtitle: 'Schedule your ambulance for later',
-                  onTap: () {
-                    Navigator.pop(sheetContext);
-                    _startBooking('Reservation', ambulance);
-                  },
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _bookingOption({
-    required IconData icon,
-    required Color color,
-    required String title,
-    required String subtitle,
-    required VoidCallback onTap,
-  }) {
-    return Material(
-      color: backgroundColor,
-      borderRadius: BorderRadius.circular(17),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(17),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Container(
-                height: 54,
-                width: 54,
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.10),
-                  borderRadius: BorderRadius.circular(15),
-                ),
-                child: Icon(icon, color: color, size: 29),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        color: navy,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 15,
-                      ),
-                    ),
-                    const SizedBox(height: 5),
-                    Text(
-                      subtitle,
-                      style: TextStyle(
-                        color: Colors.grey.shade600,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const Icon(
-                Icons.arrow_forward_ios_rounded,
-                size: 16,
-                color: Colors.grey,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   Future<void> _startBooking(
     String bookingType,
     Map<String, dynamic> ambulance,
   ) async {
-    setState(() {
-      _selectedBookingType = bookingType;
-      _selectedAmbulance = ambulance;
-    });
+    DateTime? selectedDate;
+    TimeOfDay? selectedTime;
 
     if (bookingType == 'Reservation') {
-      final DateTime? date = await showDatePicker(
+      selectedDate = await showDatePicker(
         context: context,
         initialDate: DateTime.now().add(const Duration(days: 1)),
         firstDate: DateTime.now(),
         lastDate: DateTime.now().add(const Duration(days: 365)),
-        builder: (context, child) => Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(primary: primaryBlue),
-          ),
-          child: child!,
-        ),
       );
 
-      if (!mounted || date == null) return;
+      if (!mounted || selectedDate == null) return;
 
-      final TimeOfDay? time = await showTimePicker(
+      selectedTime = await showTimePicker(
         context: context,
         initialTime: TimeOfDay.now(),
       );
 
-      if (!mounted || time == null) return;
-
-      setState(() {
-        _reservationDate = date;
-        _reservationTime = time;
-      });
+      if (!mounted || selectedTime == null) return;
     }
 
     if (!mounted) return;
-    _showMessage(
-      bookingType == 'Emergency'
-          ? '${ambulance['name']} selected. Pickup, destination and patient details screen needs to be connected next.'
-          : 'Reservation time selected. Pickup, destination and confirmation screen needs to be connected next.',
+
+    setState(() {
+      _selectedBookingType = bookingType;
+      _selectedAmbulance = ambulance;
+      _reservationDate = selectedDate;
+      _reservationTime = selectedTime;
+    });
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => BookingScreen(
+          ambulance: {
+            ...ambulance,
+            'booking_type': bookingType,
+            if (selectedDate != null)
+              'reservation_date':
+                  '${selectedDate.year}-${selectedDate.month.toString().padLeft(2, '0')}-${selectedDate.day.toString().padLeft(2, '0')}',
+            if (selectedTime != null)
+              'reservation_time': selectedTime.format(context),
+          },
+        ),
+      ),
     );
   }
 

@@ -10,23 +10,6 @@
                 "chrome",
                 "--web-port=53344"
             ]
-        },
-        {
-            "name": "mediride",
-            "request": "launch",
-            "type": "dart"
-        },
-        {
-            "name": "mediride (profile mode)",
-            "request": "launch",
-            "type": "dart",
-            "flutterMode": "profile"
-        },
-        {
-            "name": "mediride (release mode)",
-            "request": "launch",
-            "type": "dart",
-            "flutterMode": "release"
         }
     ]
 }

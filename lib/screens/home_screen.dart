@@ -3,6 +3,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'login_screen.dart';
 import 'booking_screen.dart';
+import 'pickup_location_screen.dart';
+import 'package:latlong2/latlong.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -19,6 +21,27 @@ class _HomeScreenState extends State<HomeScreen> {
   static const Color borderColor = Color(0xFFE5EAF2);
 
   int _selectedIndex = 0;
+
+  // User-selected pickup coordinates and address
+  LatLng? _pickupLocation;
+  String? _pickupAddress;
+
+  Future<void> _selectPickupLocation() async {
+    // Pickup screen theke coordinates ebong address receive korbo
+    final result = await Navigator.push<Map<String, dynamic>>(
+      context,
+      MaterialPageRoute(builder: (context) => const PickupLocationScreen()),
+    );
+
+    if (!mounted) return;
+
+    if (result != null) {
+      setState(() {
+        _pickupLocation = result['location'] as LatLng?;
+        _pickupAddress = result['address'] as String?;
+      });
+    }
+  }
 
   final List<Map<String, dynamic>> _ambulances = [
     {
@@ -133,7 +156,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         height: 76,
                         width: 76,
                         decoration: BoxDecoration(
-                          color: color.withValues(alpha: 0.10),
+                          color: color.withOpacity(0.10),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Image.asset(
@@ -316,7 +339,13 @@ class _HomeScreenState extends State<HomeScreen> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => BookingScreen(ambulance: ambulance),
+                            builder: (_) => BookingScreen(
+                              ambulance: {
+                                ...ambulance,
+                                'pickup_location': _pickupLocation,
+                                'pickup_address': _pickupAddress,
+                              },
+                            ),
                           ),
                         );
                       },
@@ -488,50 +517,62 @@ class _HomeScreenState extends State<HomeScreen> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(18, 12, 18, 28),
       children: [
-        Container(
-          padding: const EdgeInsets.all(13),
-          decoration: BoxDecoration(
-            color: Colors.white,
+        Material(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(15),
+          child: InkWell(
             borderRadius: BorderRadius.circular(15),
-            border: Border.all(color: borderColor),
-          ),
-          child: Row(
-            children: [
-              Container(
-                height: 42,
-                width: 42,
-                decoration: BoxDecoration(
-                  color: lightBlue,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(
-                  Icons.location_on_rounded,
-                  color: primaryBlue,
-                ),
+            onTap: _selectPickupLocation,
+            child: Container(
+              padding: const EdgeInsets.all(13),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(15),
+                border: Border.all(color: borderColor),
               ),
-              const SizedBox(width: 12),
-              const Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Pickup location',
-                      style: TextStyle(fontSize: 12, color: Colors.grey),
+              child: Row(
+                children: [
+                  Container(
+                    height: 42,
+                    width: 42,
+                    decoration: BoxDecoration(
+                      color: lightBlue,
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    SizedBox(height: 4),
-                    Text(
-                      'Sylhet, Bangladesh',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: navy,
-                      ),
+                    child: const Icon(
+                      Icons.location_on_rounded,
+                      color: primaryBlue,
                     ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Pickup location',
+                          style: TextStyle(fontSize: 12, color: Colors.grey),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          _pickupAddress ?? 'Sylhet, Bangladesh',
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: navy,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Icon(
+                    Icons.keyboard_arrow_down_rounded,
+                    color: Colors.grey,
+                  ),
+                ],
               ),
-              const Icon(Icons.keyboard_arrow_down_rounded, color: Colors.grey),
-            ],
+            ),
           ),
         ),
         const SizedBox(height: 20),
@@ -660,7 +701,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: color.withValues(alpha: 0.35)),
+                    border: Border.all(color: color.withOpacity(0.35)),
                   ),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -669,7 +710,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         height: 42,
                         width: 42,
                         decoration: BoxDecoration(
-                          color: color.withValues(alpha: 0.10),
+                          color: color.withOpacity(0.10),
                           borderRadius: BorderRadius.circular(13),
                         ),
                         child: Image.asset(
@@ -805,7 +846,7 @@ class _HomeScreenState extends State<HomeScreen> {
             height: 54,
             width: 54,
             decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.10),
+              color: color.withOpacity(0.10),
               borderRadius: BorderRadius.circular(16),
             ),
             child: Icon(icon, color: color, size: 30),
@@ -917,7 +958,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(vertical: 4),
       leading: CircleAvatar(
-        backgroundColor: color.withValues(alpha: 0.10),
+        backgroundColor: color.withOpacity(0.10),
         child: Icon(ambulance['icon'] as IconData, color: color),
       ),
       title: Text('${ambulance['name']} Ambulance'),
@@ -1084,7 +1125,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 height: 48,
                 width: 48,
                 decoration: BoxDecoration(
-                  color: (ambulance['color'] as Color).withValues(alpha: 0.10),
+                  color: (ambulance['color'] as Color).withOpacity(0.10),
                   borderRadius: BorderRadius.circular(13),
                 ),
                 child: Icon(

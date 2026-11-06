@@ -67,7 +67,6 @@ class _SplashScreenState extends State<SplashScreen> {
           Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
-
               children: [
                 // ==================================================
                 // LOGO
@@ -75,11 +74,9 @@ class _SplashScreenState extends State<SplashScreen> {
                 Container(
                   height: 120,
                   width: 120,
-
                   decoration: BoxDecoration(
                     color: Colors.white,
                     shape: BoxShape.circle,
-
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withOpacity(0.25),
@@ -88,7 +85,6 @@ class _SplashScreenState extends State<SplashScreen> {
                       ),
                     ],
                   ),
-
                   child: const Icon(
                     Icons.local_hospital,
                     size: 65,
@@ -134,7 +130,6 @@ class _SplashScreenState extends State<SplashScreen> {
                 const SizedBox(
                   height: 28,
                   width: 28,
-
                   child: CircularProgressIndicator(
                     strokeWidth: 3,
                     color: Colors.white,
